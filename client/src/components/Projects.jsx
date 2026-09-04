@@ -1,238 +1,242 @@
-/**
- * Projects.jsx
- * ==============
- * Role: Displays all portfolio projects in a responsive grid.
- *
- * How it works:
- * - Each project is a 3D-tilt card (tilts based on mouse position)
- * - Cards appear with staggered scroll animations (one after another)
- * - Shows project count in the section header
- * - GitHub and Live Demo links are displayed beside the project title
- * - Tags are shown as colored chips at the bottom of each card
- */
-
 import React from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { FiExternalLink, FiGithub, FiArrowRight } from 'react-icons/fi';
+import { featuredProjects, selectedProjects } from '../data/projectsData';
 
-/**
- * ProjectCard component
- * =====================
- * A single project card with 3D tilt effect on mouse hover.
- *
- * How the 3D tilt works:
- * 1. Track mouse position relative to the card
- * 2. Convert mouse position to a percentage (-0.5 to 0.5)
- * 3. Map that percentage to rotation degrees using framer-motion's useTransform
- * 4. Apply the rotation with CSS transform
- *
- * @param {number} index - position in the list (used for stagger delay)
- */
-const ProjectCard = ({ title, description, tags, githubLink, demoLink, isUpcoming, index }) => {
-  // Motion values for tracking mouse position on the card
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  // Add spring physics so the tilt feels smooth and springy
-  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-  const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
-
-  // Convert mouse position to rotation angles
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], ["17.5deg", "-17.5deg"]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-17.5deg", "17.5deg"]);
-
-  // Calculate mouse position as a fraction of card width/height
-  const handleMouseMove = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const xPct = (e.clientX - rect.left) / rect.width - 0.5;
-    const yPct = (e.clientY - rect.top) / rect.height - 0.5;
-    x.set(xPct);
-    y.set(yPct);
-  };
-
-  // Reset tilt when mouse leaves the card
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
+export default function Projects({ onOpenCaseStudy }) {
   return (
-    <motion.div
-      // Staggered scroll-in animation: each card fades in 0.1s after the previous
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      viewport={{ once: true }}
-      style={{
-        rotateX,
-        rotateY,
-        transformStyle: "preserve-3d",
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`relative w-full h-[26rem] rounded-xl glass-card ${isUpcoming ? 'border-dashed !border-neon-purple/30' : ''} p-6 flex flex-col justify-between group cursor-pointer hover:shadow-[0_0_40px_rgba(0,243,255,0.1)] transition-shadow duration-500`}
-    >
-      {/* Top section: title, links, description */}
-      <div style={{ transform: "translateZ(50px)" }}>
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex flex-col gap-2">
-            {/* Project name */}
-            <h3 className="text-2xl font-bold text-white group-hover:text-neon-blue transition-colors">
-              {title}
-            </h3>
-
-            {/* GitHub and Live Demo links (only if not an upcoming project) */}
-            {!isUpcoming && (
-              <div className="flex gap-4 items-center">
-                {githubLink && (
-                  <a
-                    href={githubLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-gray-400 hover:text-white flex items-center gap-1.5 transition-colors z-20"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span>GitHub</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-                  </a>
-                )}
-                {demoLink && (
-                  <a
-                    href={demoLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-neon-blue hover:text-neon-purple flex items-center gap-1.5 transition-colors z-20"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <span>Live Demo</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* "Coming Soon" badge for upcoming projects */}
-          {isUpcoming && (
-            <span className="px-2 py-1 text-[10px] whitespace-nowrap font-bold uppercase tracking-wider text-neon-purple border border-neon-purple rounded bg-neon-purple/10 animate-pulse">
-              Coming Soon
-            </span>
-          )}
+    <section id="work" className="py-20 relative">
+      <div className="max-w-6xl mx-auto px-6 md:px-8">
+        
+        {/* Section Header */}
+        <div className="mb-16">
+          <span className="font-mono text-xs text-[#f59e0b] block mb-2 uppercase tracking-wider">
+            Work
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#f3f4f6]">
+            Featured Projects
+          </h2>
+          <p className="text-[#9ca3af] text-base mt-2 max-w-2xl">
+            Selected projects across developer tooling, systems programming, and real-time web applications.
+          </p>
         </div>
 
-        {/* Project description */}
-        <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-          {description}
-        </p>
-      </div>
+        {/* Featured Projects List */}
+        <div className="space-y-16">
+          {featuredProjects.map((project) => (
+            <article
+              key={project.id}
+              className="pt-10 border-t border-[#20242c]"
+            >
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                
+                {/* Details Column */}
+                <div className="lg:col-span-7 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="font-mono text-sm font-semibold text-[#f59e0b]">
+                        {project.number}
+                      </span>
+                      <span className="text-[#3f4553] font-mono text-xs">•</span>
+                      <span className="font-mono text-xs text-[#9ca3af]">
+                        {project.domain}
+                      </span>
+                      <span className="text-xs text-[#71717a] font-mono ml-auto">
+                        {project.year}
+                      </span>
+                    </div>
 
-      {/* Bottom section: tech stack tags */}
-      <div style={{ transform: "translateZ(40px)" }} className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-white/5 text-neon-blue border border-neon-blue/20 hover:bg-neon-blue/10 transition-colors">
-              {tag}
-            </span>
+                    <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-[#f3f4f6] mb-1">
+                      {project.title}
+                    </h3>
+                    <p className="text-sm text-[#f59e0b] mb-4">
+                      {project.subtitle}
+                    </p>
+
+                    <p className="text-[#d1d5db] text-sm leading-relaxed mb-6">
+                      {project.description}
+                    </p>
+
+                    <ul className="space-y-2 mb-6">
+                      {project.highlights.map((item, hIdx) => (
+                        <li key={hIdx} className="text-xs sm:text-sm text-[#9ca3af] flex items-start gap-2.5">
+                          <span className="text-[#f59e0b] text-xs mt-0.5">•</span>
+                          <span className="leading-relaxed">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {project.technologies.map((tech) => (
+                        <span
+                          key={tech}
+                          className="text-xs font-mono px-2.5 py-1 rounded bg-[#14171d] border border-[#222732] text-[#9ca3af]"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-[#181b22]">
+                      <button
+                        onClick={() => onOpenCaseStudy(project)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#171a21] hover:bg-[#202530] border border-[#282f3d] text-xs font-mono text-[#f3f4f6] hover:text-[#f59e0b] transition-all"
+                      >
+                        <span>Project Overview</span>
+                        <FiArrowRight size={12} />
+                      </button>
+
+                      {project.caseStudy.links.github && (
+                        <a
+                          href={project.caseStudy.links.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-mono text-[#9ca3af] hover:text-[#f3f4f6] transition-colors"
+                        >
+                          <FiGithub size={13} />
+                          <span>Source</span>
+                        </a>
+                      )}
+
+                      {project.caseStudy.links.demo && (
+                        <a
+                          href={project.caseStudy.links.demo}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-mono text-[#f59e0b] hover:text-[#fbbf24] transition-colors"
+                        >
+                          <FiExternalLink size={13} />
+                          <span>Live Demo</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visual Column */}
+                <div className="lg:col-span-5 flex items-center justify-center">
+                  <div className="w-full rounded-xl bg-[#101216] border border-[#20242c] p-6 flex flex-col items-center justify-center min-h-[220px]">
+                    {project.image ? (
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={project.image}
+                          alt={project.imageAlt}
+                          className="w-24 h-24 object-contain rounded-xl mb-3"
+                        />
+                        <span className="text-xs font-mono text-[#71717a]">
+                          {project.title} Asset
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="w-full space-y-2 font-mono text-xs text-[#9ca3af]">
+                        <div className="text-[11px] text-[#f59e0b] uppercase tracking-wider mb-2">
+                          Key Modules
+                        </div>
+                        {project.id === 'codeorbit' ? (
+                          <>
+                            <div className="p-2.5 rounded bg-[#14171d] border border-[#20242c]">
+                              Local CLI (.MyGit staging &amp; commit tree)
+                            </div>
+                            <div className="p-2.5 rounded bg-[#14171d] border border-[#20242c]">
+                              Cloud Remote (AWS S3 snapshot sync)
+                            </div>
+                            <div className="p-2.5 rounded bg-[#14171d] border border-[#20242c]">
+                              Web Dashboard (React repo explorer)
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="p-2.5 rounded bg-[#14171d] border border-[#20242c]">
+                              WebRTC peer-to-peer audio &amp; video
+                            </div>
+                            <div className="p-2.5 rounded bg-[#14171d] border border-[#20242c]">
+                              Socket.IO signaling &amp; room coordination
+                            </div>
+                            <div className="p-2.5 rounded bg-[#14171d] border border-[#20242c]">
+                              Screen share &amp; in-call text chat
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </article>
           ))}
         </div>
-      </div>
 
-      {/* Hover gradient overlay for depth effect */}
-      <div
-        className="absolute inset-0 rounded-xl bg-gradient-to-br from-neon-blue/10 via-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ transform: "translateZ(0px)" }}
-      />
-    </motion.div>
-  );
-};
+        {/* Selected Secondary Work */}
+        <div className="mt-20 pt-12 border-t border-[#20242c]">
+          <div className="mb-8">
+            <h3 className="text-xl md:text-2xl font-bold text-[#f3f4f6]">
+              Other Work
+            </h3>
+          </div>
 
-export default function Projects() {
-  // All projects data
-  const projects = [
-    {
-      title: "FocusLabs",
-      description: "A clean and intelligent productivity dashboard that helps you track habits, manage time, and stay consistent. Features monthly habit grids, streak analytics, session timers, and real-time syncing — all wrapped in a smooth, distraction-free UI.",
-      tags: ["React", "Productivity", "Habit Tracking", "Time Management", "Analytics"],
-      githubLink: "https://github.com/silent-knight19/FocusLabs",
-      demoLink: "https://collabedit-26531.web.app"
-    },
-    {
-      title: "CodeOrbit",
-      description: "A lightweight, modern version control system inspired by GitHub — built from scratch to manage repositories, track file versions, and handle uploads seamlessly. CodeOrbit stores project snapshots efficiently using Amazon S3, enabling reliable, scalable, cloud-backed version management.",
-      tags: ["Node.js", "AWS S3", "Version Control", "Cloud Storage", "Dev Tools"],
-      githubLink: "https://github.com/silent-knight19/CodeOrbit"
-    },
-    {
-      title: "HeartToHeart",
-      description: "A private, real-time video calling app built for couples who want a simple, secure, and uninterrupted way to stay connected. HeartToHeart uses WebRTC for peer-to-peer video/audio streaming and WebSockets for lightning-fast signaling and room coordination.",
-      tags: ["Video Chat", "WebRTC", "Real-Time Apps", "Signaling", "Communication"],
-      githubLink: "https://github.com/silent-knight19/HeartToHeart"
-    },
-    {
-      title: "VerboAI",
-      description: "An intelligent AI-driven interview preparation assistant that simulates real interview scenarios. VerboAI uses advanced language models to generate dynamic questions, evaluate responses, and provide detailed feedback to help users ace their interviews.",
-      tags: ["AI", "JavaScript", "Interview Prep", "LLM", "Full Stack"],
-      githubLink: "https://github.com/silent-knight19/VerboAI",
-      demoLink: "https://verboai-7749.web.app"
-    },
-    {
-      title: "Tuf-Tracker",
-      description: "An AI-powered DSA learning companion that helps you track coding problems, get AI-generated hints using Gemini, and build a smart revision queue. Comes with streak analytics, monthly habit grids, and a premium UI.",
-      tags: ["React", "Firebase", "Gemini AI", "Express", "DSA Tracker"],
-      githubLink: "https://github.com/silent-knight19/Tuf-Tracker",
-      demoLink: "https://tuf-tracker2.vercel.app"
-    },
-    {
-      title: "PixlMeet",
-      description: "A browser-based video conferencing web app with WebRTC for peer-to-peer media streaming. Supports room creation, JWT authentication, screen sharing, in-call chat messaging, and responsive controls.",
-      tags: ["React", "WebRTC", "Socket.IO", "MongoDB", "Video Conferencing"],
-      githubLink: "https://github.com/silent-knight19/PixlMeet"
-    },
-    {
-      title: "Zerodhaa",
-      description: "A full-stack stock trading platform clone inspired by Zerodha, featuring a modern React frontend, Express backend with REST APIs, and an admin dashboard. Includes user authentication, CRUD operations, and role-based access.",
-      tags: ["React", "Express", "MongoDB", "Full Stack", "Trading Platform"],
-      githubLink: "https://github.com/silent-knight19/zerodhaa"
-    },
-    {
-      title: "Employee Management System",
-      description: "A modern, responsive web application for managing employees, tasks, and workflows. Features role-based access for admins and employees, task assignment with priority tracking, performance metrics, and a clean UI.",
-      tags: ["React", "Vite", "CSS Modules", "Context API", "Task Management"],
-      githubLink: "https://github.com/silent-knight19/Employee-management-system"
-    },
-    {
-      title: "RemoteCode",
-      description: "A real-time collaborative coding environment that lets you write and run code on another device directly from your browser. RemoteCode uses WebSockets for live editor sync, secure tunnels for device control, and isolated execution sandboxes.",
-      tags: ["Remote Coding", "Real-Time Collaboration", "WebSockets", "Execution Engine", "Developer Tools"],
-      isUpcoming: true
-    }
-  ];
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {selectedProjects.map((p) => (
+              <div
+                key={p.id}
+                className="p-6 rounded-xl bg-[#111317] border border-[#20242c] flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-xs font-mono text-[#71717a] mb-2">
+                    <span className="text-[#f59e0b]">{p.category}</span>
+                    <span>{p.year}</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-[#f3f4f6] mb-2">
+                    {p.title}
+                  </h4>
+                  <p className="text-[#9ca3af] text-xs sm:text-sm leading-relaxed mb-4">
+                    {p.description}
+                  </p>
+                </div>
 
-  // Count only non-upcoming projects for the header
-  const activeProjectCount = projects.filter(p => !p.isUpcoming).length;
+                <div>
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {p.technologies.map((t) => (
+                      <span
+                        key={t}
+                        className="text-xs font-mono px-2 py-0.5 rounded bg-[#161920] border border-[#232833] text-[#a1a1aa]"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
 
-  return (
-    <section id="projects" className="min-h-screen flex flex-col items-center justify-center p-8 py-24">
-      {/* Section heading with project count */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="text-center mb-16"
-      >
-        <h2 className="text-4xl md:text-6xl font-bold mb-4">
-          FEATURED <span className="text-neon-purple">PROJECTS</span>
-        </h2>
-        {/* Project count badge */}
-        <p className="text-gray-500 font-mono text-sm">
-          <span className="text-neon-blue">{activeProjectCount}</span> projects built • <span className="text-neon-purple">1</span> coming soon
-        </p>
-      </motion.div>
+                  <div className="flex items-center gap-4 pt-3 border-t border-[#1a1d25] text-xs font-mono">
+                    {p.githubLink && (
+                      <a
+                        href={p.githubLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[#9ca3af] hover:text-[#f3f4f6] transition-colors"
+                      >
+                        <FiGithub size={13} />
+                        <span>Source</span>
+                      </a>
+                    )}
+                    {p.demoLink && (
+                      <a
+                        href={p.demoLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[#f59e0b] hover:text-[#fbbf24] transition-colors ml-auto"
+                      >
+                        <FiExternalLink size={13} />
+                        <span>Live Demo</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-      {/* Project cards grid: 2 columns on desktop, 1 on mobile */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl w-full" style={{ perspective: '1000px' }}>
-        {projects.map((project, index) => (
-          <ProjectCard key={index} index={index} {...project} />
-        ))}
       </div>
     </section>
   );

@@ -1,237 +1,113 @@
-/**
- * Hero.jsx
- * =========
- * Role: The landing section — the first thing visitors see.
- *
- * How it works:
- * - Left side: A full-height edge-to-edge profile image (e.g., Ghibli portrait)
- * - Right side: Name/title with a glitch text effect, metrics, CTA buttons
- * - A scroll-down indicator arrow at the bottom
- */
-
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import profileImg from '../assets/profile.jpg'; // We'll tell user to replace this file
-
-// -- GlitchText: creates a text glitch effect with two colored ghost layers --
-const GlitchText = ({ text }) => {
-  return (
-    <div className="relative inline-block">
-      <span className="relative z-10">{text}</span>
-      {/* Blue ghost layer */}
-      <motion.span
-        className="absolute top-0 left-0 -z-10 text-neon-blue opacity-70"
-        animate={{
-          x: [-2, 2, -1, 0],
-          y: [1, -1, 0],
-        }}
-        transition={{
-          repeat: Infinity,
-          duration: 2,
-          repeatType: "mirror",
-          ease: "linear",
-        }}
-      >
-        {text}
-      </motion.span>
-      {/* Purple ghost layer */}
-      <motion.span
-        className="absolute top-0 left-0 -z-10 text-neon-purple opacity-70"
-        animate={{
-          x: [2, -2, 1, 0],
-          y: [-1, 1, 0],
-        }}
-        transition={{
-          repeat: Infinity,
-          duration: 3,
-          repeatType: "mirror",
-          ease: "linear",
-        }}
-      >
-        {text}
-      </motion.span>
-    </div>
-  );
-};
-
-/**
- * useCountUp hook
- * ================
- * Animates a number from 0 to a target value over a given duration.
- */
-const useCountUp = (target, duration = 2000) => {
-  const [count, setCount] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasAnimated) {
-          setHasAnimated(true);
-
-          const startTime = Date.now();
-          const timer = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const easeOut = 1 - Math.pow(1 - progress, 4);
-            setCount(Math.floor(easeOut * target));
-
-            if (progress >= 1) clearInterval(timer);
-          }, 16);
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [target, duration, hasAnimated]);
-
-  return { count, ref };
-};
+import React from 'react';
+import { FiArrowDown, FiArrowRight, FiGithub, FiLinkedin, FiMail, FiFileText } from 'react-icons/fi';
+import profileImg from '../assets/profile.jpg';
 
 export default function Hero() {
-  const linesCounter = useCountUp(30000, 2000);
-  const projectsCounter = useCountUp(9, 1500);
-
   return (
-    <section id="home" className="min-h-screen flex flex-col-reverse lg:flex-row relative bg-black/20">
-      
-      {/* ======= Left Side: Content Area ======= */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="w-full lg:w-[65%] flex flex-col justify-center p-8 md:p-12 lg:px-20 lg:py-16 pt-12 md:pt-0 min-h-[50vh] md:min-h-screen z-10"
-      >
-        <div className="max-w-xl">
-          {/* Main title with glitch effect */}
-          <motion.h1
-            className="text-5xl lg:text-7xl xl:text-8xl font-bold mb-6 leading-tight tracking-tight"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <GlitchText text="Full-Stack" />
-            <br />
-            <GlitchText text="Engineer" />
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            className="text-xl md:text-2xl text-gray-400 mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            Building <span className="text-neon-blue font-bold tracking-wide">scalable systems</span> and crushing the <span className="text-neon-green font-bold tracking-wide">Big O</span>
-          </motion.p>
-
-          {/* Identity badges */}
-          <div className="flex flex-wrap gap-3 mb-8">
-            <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm xl:text-base font-mono text-gray-300 hover:border-neon-blue/50 hover:text-neon-blue transition-all cursor-default">Web Developer</span>
-            <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm xl:text-base font-mono text-gray-300 hover:border-neon-purple/50 hover:text-neon-purple transition-all cursor-default">System Thinker</span>
-            <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm xl:text-base font-mono text-gray-300 hover:border-cyber-mint/50 hover:text-cyber-mint transition-all cursor-default">DSA Practitioner</span>
-          </div>
-
-          {/* Power tagline */}
-          <motion.p
-            className="text-base md:text-lg text-gray-300 italic mb-8 leading-relaxed font-light"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            Crafting fast, resilient, battle-tested web experiences — one clean commit at a time.
-          </motion.p>
-
-          {/* Animated Metrics */}
-          <div className="grid grid-cols-3 gap-4 xl:gap-8 mb-10 w-full">
-            {/* eslint-disable-next-line react-hooks/refs */}
-            <div className="text-center" ref={linesCounter.ref}>
-              <div className="text-2xl xl:text-4xl font-bold text-neon-blue mb-2 text-glow-blue tracking-tighter">
-                {/* eslint-disable-next-line react-hooks/refs */}
-                {linesCounter.count.toLocaleString()}+
-              </div>
-              <div className="text-xs xl:text-sm text-gray-500 uppercase tracking-widest font-semibold">Lines Written</div>
+    <section id="hero" className="min-h-[90vh] pt-28 pb-16 flex items-center relative">
+      <div className="max-w-6xl mx-auto px-6 md:px-8 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          
+          {/* Left Column */}
+          <div className="lg:col-span-7 flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="font-mono text-xs text-[#f59e0b]">FULL-STACK DEVELOPER</span>
             </div>
-            {/* eslint-disable-next-line react-hooks/refs */}
-            <div className="text-center border-x border-white/10 px-2" ref={projectsCounter.ref}>
-              <div className="text-2xl xl:text-4xl font-bold text-neon-purple mb-2 text-glow-purple tracking-tighter">
-                {/* eslint-disable-next-line react-hooks/refs */}
-                {projectsCounter.count}+
-              </div>
-              <div className="text-xs xl:text-sm text-gray-500 uppercase tracking-widest font-semibold">Full-Stack Projects</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl xl:text-4xl font-bold text-neon-green mb-2 text-glow-mint tracking-tight">A2Z</div>
-              <div className="text-xs xl:text-sm text-gray-500 uppercase tracking-widest font-semibold">DSA Progress</div>
-            </div>
-          </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <a
-              href="#projects"
-              className="px-8 py-3.5 rounded-full bg-gradient-to-r from-neon-blue to-neon-purple text-black font-bold text-base hover:shadow-[0_0_30px_rgba(0,243,255,0.4)] transition-all hover:scale-105 active:scale-95"
-            >
-              View Projects
-            </a>
-            <a
-              href="#contact"
-              className="px-8 py-3.5 rounded-full border border-white/20 text-white font-bold text-base hover:border-neon-blue hover:text-neon-blue hover:bg-neon-blue/5 transition-all hover:scale-105 active:scale-95"
-            >
-              Get in Touch
-            </a>
-          </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#f3f4f6] leading-[1.15] mb-6">
+              Hi, I'm Sachin Singh. <br />
+              I build web apps &amp; developer tools.
+            </h1>
 
-          {/* Engineering philosophy quote */}
-          <div className="border-l-4 border-cyber-mint pl-6 hidden md:block">
-            <p className="text-sm xl:text-base text-gray-400/80 italic leading-relaxed">
-              "Good engineering is timeless. I build solutions that are easy to reason about, easy to scale, and difficult to break."
+            <p className="text-base sm:text-lg text-[#9ca3af] leading-relaxed mb-8 max-w-xl">
+              I'm a software engineer with an electrical engineering background. I build full-stack web applications, developer tooling, and real-time systems using React, TypeScript, Node.js, and Java.
             </p>
+
+            <div className="flex flex-wrap gap-2.5 mb-8 font-mono text-xs text-[#a1a1aa]">
+              <span className="px-3 py-1 rounded-md bg-[#121418] border border-[#20242c]">
+                Dhanbad, India
+              </span>
+              <span className="px-3 py-1 rounded-md bg-[#121418] border border-[#20242c]">
+                React • TypeScript • Node.js
+              </span>
+              <span className="px-3 py-1 rounded-md bg-[#121418] border border-[#20242c]">
+                Java DSA
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap items-center gap-4 mb-10">
+              <a
+                href="#work"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#f59e0b] hover:bg-[#d97706] text-black font-semibold text-sm transition-all"
+              >
+                <span>View Projects</span>
+                <FiArrowDown size={14} />
+              </a>
+              <a
+                href="#contact"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#14171d] hover:bg-[#1c2028] border border-[#262c37] hover:border-[#384252] text-[#ededed] font-medium text-sm transition-all"
+              >
+                <span>Get in Touch</span>
+                <FiArrowRight size={14} />
+              </a>
+            </div>
+
+            {/* Direct Links */}
+            <div className="flex items-center gap-6 pt-6 border-t border-[#1c2028] text-xs font-mono text-[#71717a]">
+              <a
+                href="https://github.com/silent-knight19"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-[#f3f4f6] transition-colors"
+              >
+                <FiGithub size={14} />
+                <span>GitHub</span>
+              </a>
+              <a
+                href="https://www.linkedin.com/in/sachinsinghdev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-[#f3f4f6] transition-colors"
+              >
+                <FiLinkedin size={14} />
+                <span>LinkedIn</span>
+              </a>
+              <a
+                href="mailto:sachinsinghtomar7749@gmail.com"
+                className="inline-flex items-center gap-1.5 hover:text-[#f3f4f6] transition-colors"
+              >
+                <FiMail size={14} />
+                <span>Email</span>
+              </a>
+              <a
+                href="https://drive.google.com/file/d/16Mb5gtcXYeXDg07_rwXUu-YhLQvvx4RH/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[#f59e0b] hover:text-[#fbbf24] transition-colors"
+              >
+                <FiFileText size={14} />
+                <span>Résumé</span>
+              </a>
+            </div>
           </div>
+
+          {/* Right Column: Clean Portrait */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end">
+            <div className="relative w-full max-w-sm rounded-2xl overflow-hidden border border-[#222731] bg-[#111317] p-2">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#161920]">
+                <img
+                  src={profileImg}
+                  alt="Sachin Singh"
+                  className="w-full h-full object-cover object-top filter grayscale hover:grayscale-0 transition-all duration-500"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          </div>
+
         </div>
-      </motion.div>
-
-      {/* ======= Right Side: Full-Height Image ======= */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="w-full lg:w-[35%] h-[50vh] md:h-screen relative overflow-hidden"
-      >
-        {/* The actual profile image */}
-        <img
-          src={profileImg}
-          alt="Sachin Singh - Full Stack Developer"
-          className="w-full h-full object-cover object-top"
-        />
-
-        {/* Gradient overlays to smoothly blend the image into the dark background on the left */}
-        {/* Mobile: bottom gradient fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-dark-bg to-transparent pointer-events-none lg:hidden"></div>
-        {/* Desktop: left edge gradient fade */}
-        <div className="absolute top-0 left-0 bottom-0 w-32 bg-gradient-to-r from-dark-bg to-transparent pointer-events-none hidden lg:block"></div>
-      </motion.div>
-
-      {/* Scroll Down Indicator (bottom right on desktop, bottom center on mobile) */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 lg:left-8 lg:translate-x-0 xl:left-12 flex flex-col items-center gap-2 z-20 hidden md:flex"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
-      >
-        <span className="text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em] relative top-1">Scroll</span>
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,243,255,0.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M7 13l5 5 5-5M7 6l5 5 5-5" />
-          </svg>
-        </motion.div>
-      </motion.div>
+      </div>
     </section>
   );
 }

@@ -6,65 +6,37 @@ export default {
   ],
   theme: {
     extend: {
-      /* =============================
-       * Custom color palette
-       * - neon-blue:    primary accent (cyan-ish)
-       * - neon-purple:  secondary accent
-       * - neon-green:   success / highlight
-       * - cyber-mint:   premium mint accent
-       * - dark-bg/card: dark backgrounds for the dark theme
-       * ============================= */
       colors: {
-        'neon-blue': '#00f3ff',
-        'neon-purple': '#bc13fe',
-        'neon-green': '#0aff0a',
-        'cyber-mint': '#00ff9d',
-        'dark-bg': '#050505',
-        'dark-card': '#0a0a0a',
-        card: 'rgba(255, 255, 255, 0.05)',
+        editorial: {
+          bg: '#0b0c0e',
+          surface: '#111317',
+          elevated: '#171a21',
+          hover: '#1e222b',
+          border: '#20242c',
+          borderSubtle: '#181b22',
+          borderHover: '#2e3542',
+          text: '#f3f4f6',
+          muted: '#9ca3af',
+          dim: '#6b7280',
+          accent: '#f59e0b',
+          accentDim: '#b45309',
+        },
       },
-
-      /* Font families loaded from Google Fonts CDN */
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        mono: ['Space Mono', 'monospace'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Space Mono', 'ui-monospace', 'monospace'],
       },
-
-      /* =============================
-       * Custom animations
-       * - spin-slow:      very slow infinite rotation
-       * - pulse-fast:     quicker pulse for glow effects
-       * - float:          gentle floating up-and-down
-       * - glow-pulse:     pulsing glow ring effect
-       * - gradient-shift: shifting gradient background
-       * - fade-in-up:     slide up + fade in on load
-       * ============================= */
       animation: {
-        'spin-slow': 'spin 20s linear infinite',
-        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'float': 'float 6s ease-in-out infinite',
-        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
-        'gradient-shift': 'gradient-shift 8s ease infinite',
-        'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+        'fade-in': 'fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'slide-up': 'slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       },
-
-      /* Keyframes that power the custom animations above */
       keyframes: {
-        'float': {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         },
-        'glow-pulse': {
-          '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
-          '50%': { opacity: '0.8', transform: 'scale(1.05)' },
-        },
-        'gradient-shift': {
-          '0%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-          '100%': { backgroundPosition: '0% 50%' },
-        },
-        'fade-in-up': {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },

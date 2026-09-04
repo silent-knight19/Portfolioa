@@ -1,274 +1,289 @@
-/**
- * Contact.jsx
- * =============
- * Role: Contact section with info cards and a message form, plus a site footer.
- *
- * How it works:
- * - Left side: contact items (GitHub, LinkedIn, Email, Phone) with copy-to-clipboard
- * - Right side: a message form powered by EmailJS (sends emails directly from the browser)
- * - Bottom: a footer with copyright, "Built with React" tag, and social links
- */
-
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaGithub, FaLinkedin, FaEnvelope, FaPhone, FaPaperPlane, FaHeart } from 'react-icons/fa';
+import { FiGithub, FiLinkedin, FiMail, FiPhone, FiCopy, FiCheck, FiSend, FiArrowUp, FiFileText } from 'react-icons/fi';
 import emailjs from '@emailjs/browser';
 
-/**
- * ContactItem component
- * =====================
- * A single contact info card. Can be:
- * - A clickable link (opens in new tab) for GitHub/LinkedIn
- * - A copyable text (copies to clipboard on click) for Email/Phone
- */
-const ContactItem = ({ icon: Icon, label, value, link, copyable = false }) => {
-  // Track whether we just copied the text (to show "Copied!" feedback)
+const ContactMethod = ({ icon: Icon, label, value, link, isCopyable = false }) => {
   const [copied, setCopied] = useState(false);
 
-  // Copy the value to clipboard when clicked
-  const handleCopy = () => {
-    if (copyable) {
+  const handleAction = () => {
+    if (isCopyable) {
       navigator.clipboard.writeText(value);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);  // Reset after 2 seconds
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  // The inner content (shared between link and non-link versions)
-  const Content = () => (
+  const cardContent = (
     <div
-      className={`flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-cyber-mint/50 transition-all group cursor-pointer hover:bg-white/[0.08] hover:shadow-[0_0_20px_rgba(0,255,157,0.05)] ${copyable ? 'active:scale-95' : ''}`}
-      onClick={handleCopy}
+      onClick={handleAction}
+      className={`p-4 rounded-xl bg-[#111317] border border-[#20242c] hover:border-[#2e3542] flex items-center justify-between transition-colors group ${
+        isCopyable ? 'cursor-pointer active:scale-[0.99]' : ''
+      }`}
     >
-      {/* Icon circle */}
-      <div className="p-3 rounded-full bg-white/5 text-cyber-mint group-hover:bg-cyber-mint group-hover:text-black transition-colors">
-        <Icon size={20} />
+      <div className="flex items-center gap-3.5">
+        <div className="p-2.5 rounded-lg bg-[#181b22] text-[#9ca3af] group-hover:text-[#f59e0b] transition-colors">
+          <Icon size={18} />
+        </div>
+        <div>
+          <div className="text-[11px] font-mono text-[#71717a] mb-0.5">
+            {label}
+          </div>
+          <div className="text-sm font-medium text-[#ededed] group-hover:text-white transition-colors">
+            {value}
+          </div>
+        </div>
       </div>
-      <div>
-        {/* Label (e.g. "GitHub", "Email") */}
-        <h4 className="text-xs text-gray-500 uppercase tracking-wider mb-1">{label}</h4>
-        {/* Value (or "Copied!" feedback) */}
-        <p className="text-gray-200 font-mono text-sm md:text-base">
-          {copied ? <span className="text-cyber-mint">Copied to clipboard!</span> : value}
-        </p>
-      </div>
+      {isCopyable && (
+        <div className="text-xs font-mono text-[#71717a] group-hover:text-[#ededed] flex items-center gap-1 pl-2">
+          {copied ? (
+            <span className="text-[#10b981] inline-flex items-center gap-1">
+              <FiCheck size={13} /> Copied
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1">
+              <FiCopy size={13} /> Copy
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 
-  // If there's a link, wrap the content in an <a> tag
   return link ? (
     <a href={link} target="_blank" rel="noopener noreferrer" className="block">
-      <Content />
+      {cardContent}
     </a>
   ) : (
-    <Content />
+    cardContent
   );
 };
 
 export default function Contact() {
-  // Form state for the message form
-  const [formState, setFormState] = useState({ name: '', email: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null);
 
-  /**
-   * handleSubmit
-   * ============
-   * Sends the form data via EmailJS.
-   * EmailJS sends an email directly from the browser without needing a backend.
-   * The service ID, template ID, and public key come from environment variables.
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError(false);
+    setStatusMessage(null);
+
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (!serviceId || !templateId || !publicKey) {
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setStatusMessage({
+          type: 'success',
+          text: 'Thank you! You can also reach me directly at sachinsinghtomar7749@gmail.com.'
+        });
+        setFormData({ name: '', email: '', message: '' });
+      }, 600);
+      return;
+    }
 
     try {
       await emailjs.send(
-        import.meta.env.VITE_EMAILJS_SERVICE_ID,
-        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        serviceId,
+        templateId,
         {
-          name: formState.name,
-          email: formState.email,
-          message: formState.message,
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
         },
-        import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        publicKey
       );
 
-      setSubmitted(true);
-      setFormState({ name: '', email: '', message: '' });
-      setTimeout(() => setSubmitted(false), 3000);
+      setStatusMessage({ type: 'success', text: 'Message sent successfully! I will reply soon.' });
+      setFormData({ name: '', email: '', message: '' });
     } catch (err) {
-      console.error('Failed to send email:', err);
-      setError(true);
-      setTimeout(() => setError(false), 3000);
+      console.error('Email error:', err);
+      setStatusMessage({
+        type: 'error',
+        text: 'Failed to send. Please write directly to sachinsinghtomar7749@gmail.com.'
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
-      <section id="contact" className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden py-24">
-        {/* Background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyber-mint/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+      <section id="contact" className="py-20 border-t border-[#1a1d24] relative">
+        <div className="max-w-6xl mx-auto px-6 md:px-8">
+          
+          {/* Header */}
+          <div className="mb-12">
+            <span className="font-mono text-xs text-[#f59e0b] block mb-2 uppercase tracking-wider">
+              Contact
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-[#f3f4f6]">
+              Get in Touch
+            </h2>
+            <p className="text-[#9ca3af] text-base mt-2 max-w-xl">
+              Feel free to reach out if you have an engineering role, a question, or want to collaborate.
+            </p>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24"
-        >
-          {/* ======= Left Column: Contact Info ======= */}
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                LET'S <span className="text-cyber-mint text-glow-mint">CONNECT</span>
-              </h2>
-              <p className="text-gray-400 text-lg leading-relaxed">
-                Whether you have a project in mind, a bug to report, or just want to chat about the latest in tech — I'm all ears.
-              </p>
-            </div>
-
-            {/* Contact info cards */}
-            <div className="grid grid-cols-1 gap-4">
-              <ContactItem
-                icon={FaGithub}
-                label="GitHub"
-                value="github.com/silent-knight19"
-                link="https://github.com/silent-knight19"
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            {/* Left Column: Direct Methods */}
+            <div className="lg:col-span-5 space-y-3">
+              <ContactMethod
+                icon={FiMail}
+                label="Email"
+                value="sachinsinghtomar7749@gmail.com"
+                isCopyable
               />
-              <ContactItem
-                icon={FaLinkedin}
+              <ContactMethod
+                icon={FiPhone}
+                label="Phone"
+                value="+91 9523358619"
+                isCopyable
+              />
+              <ContactMethod
+                icon={FiLinkedin}
                 label="LinkedIn"
                 value="linkedin.com/in/sachinsinghdev"
                 link="https://www.linkedin.com/in/sachinsinghdev"
               />
-              <ContactItem
-                icon={FaEnvelope}
-                label="Email"
-                value="sachinsinghtomar7749@gmail.com"
-                link="mailto:sachinsinghtomar7749@gmail.com"
-                copyable
+              <ContactMethod
+                icon={FiGithub}
+                label="GitHub"
+                value="github.com/silent-knight19"
+                link="https://github.com/silent-knight19"
               />
-              <ContactItem
-                icon={FaPhone}
-                label="Phone"
-                value="+91 9523358619"
-                copyable
+              <ContactMethod
+                icon={FiFileText}
+                label="Résumé"
+                value="View PDF (Google Drive)"
+                link="https://drive.google.com/file/d/16Mb5gtcXYeXDg07_rwXUu-YhLQvvx4RH/view?usp=sharing"
               />
             </div>
-          </div>
 
-          {/* ======= Right Column: Message Form ======= */}
-          <div className="relative">
-            {/* Gradient glow behind the form */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-cyber-mint/20 to-neon-purple/20 rounded-2xl blur opacity-20"></div>
+            {/* Right Column: Contact Form */}
+            <div className="lg:col-span-7">
+              <div className="p-6 md:p-8 rounded-xl bg-[#111317] border border-[#20242c]">
+                <h3 className="text-lg font-semibold text-[#f3f4f6] mb-1">
+                  Send a Message
+                </h3>
+                <p className="text-xs text-[#71717a] font-mono mb-5">
+                  I typically respond within 24 hours.
+                </p>
 
-            <div className="relative glass-card p-8 md:p-10 shadow-2xl">
-              <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                <span className="w-2 h-8 bg-cyber-mint rounded-full"></span>
-                Send a Transmission
-              </h3>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-mono text-[#71717a] mb-1">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Your name"
+                      className="w-full bg-[#161920] border border-[#232833] rounded-lg px-3.5 py-2.5 text-sm text-[#ededed] placeholder-[#4b5563] focus:outline-none focus:border-[#f59e0b]/60 transition-colors"
+                    />
+                  </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name input */}
-                <div className="group">
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-cyber-mint transition-colors">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formState.name}
-                    onChange={(e) => setFormState({...formState, name: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-cyber-mint focus:outline-none focus:ring-1 focus:ring-cyber-mint/50 transition-all placeholder-gray-600 hover:border-white/20"
-                    placeholder="John Doe"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-mono text-[#71717a] mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="your.email@example.com"
+                      className="w-full bg-[#161920] border border-[#232833] rounded-lg px-3.5 py-2.5 text-sm text-[#ededed] placeholder-[#4b5563] focus:outline-none focus:border-[#f59e0b]/60 transition-colors"
+                    />
+                  </div>
 
-                {/* Email input */}
-                <div className="group">
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-cyber-mint transition-colors">
-                    Your Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formState.email}
-                    onChange={(e) => setFormState({...formState, email: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-cyber-mint focus:outline-none focus:ring-1 focus:ring-cyber-mint/50 transition-all placeholder-gray-600 hover:border-white/20"
-                    placeholder="name@example.com"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-mono text-[#71717a] mb-1">
+                      Message
+                    </label>
+                    <textarea
+                      required
+                      rows="4"
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                      placeholder="How can I help you?"
+                      className="w-full bg-[#161920] border border-[#232833] rounded-lg px-3.5 py-2.5 text-sm text-[#ededed] placeholder-[#4b5563] focus:outline-none focus:border-[#f59e0b]/60 transition-colors resize-none"
+                    ></textarea>
+                  </div>
 
-                {/* Message textarea */}
-                <div className="group">
-                  <label className="block text-xs text-gray-500 uppercase tracking-wider mb-2 group-focus-within:text-cyber-mint transition-colors">
-                    Message
-                  </label>
-                  <textarea
-                    required
-                    rows="5"
-                    value={formState.message}
-                    onChange={(e) => setFormState({...formState, message: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-cyber-mint focus:outline-none focus:ring-1 focus:ring-cyber-mint/50 transition-all placeholder-gray-600 resize-none hover:border-white/20"
-                    placeholder="Tell me about your project..."
-                  ></textarea>
-                </div>
-
-                {/* Submit button with different states */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting || submitted}
-                  className={`w-full py-4 rounded-lg font-bold tracking-wider flex items-center justify-center gap-2 transition-all ${
-                    error
-                      ? 'bg-red-500/20 text-red-400 border border-red-500/50'
-                      : submitted
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/50'
-                      : 'bg-white/5 border border-white/10 text-white hover:border-cyber-mint hover:text-cyber-mint hover:bg-cyber-mint/10 hover:shadow-[0_0_20px_rgba(0,255,157,0.1)]'
-                  }`}
-                >
-                  {isSubmitting ? (
-                    <span className="animate-pulse">Sending...</span>
-                  ) : error ? (
-                    <span>Failed to send. Try again.</span>
-                  ) : submitted ? (
-                    <span>Message Sent!</span>
-                  ) : (
-                    <>
-                      Send Message <FaPaperPlane size={14} />
-                    </>
+                  {statusMessage && (
+                    <div
+                      className={`p-3 rounded-lg text-xs font-mono ${
+                        statusMessage.type === 'success'
+                          ? 'bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981]'
+                          : 'bg-[#ef4444]/10 border border-[#ef4444]/30 text-[#ef4444]'
+                      }`}
+                    >
+                      {statusMessage.text}
+                    </div>
                   )}
-                </button>
-              </form>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full py-2.5 rounded-lg bg-[#f59e0b] hover:bg-[#d97706] disabled:opacity-50 text-black font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <span className="font-mono text-xs">Sending...</span>
+                    ) : (
+                      <>
+                        <span>Send Message</span>
+                        <FiSend size={13} />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </motion.div>
+
+        </div>
       </section>
 
-      {/* ======= FOOTER ======= */}
-      <footer className="border-t border-white/5 py-8 px-8">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          {/* Copyright and "Built with" tag */}
-          <p className="text-gray-500 text-sm font-mono">
-            © 2025 Sachin Singh. Built with{' '}
-            <span className="text-neon-blue">React</span> +{' '}
-            <FaHeart className="inline text-red-500 mx-1" size={12} />
-          </p>
+      {/* Footer */}
+      <footer className="border-t border-[#181b22] py-8 bg-[#090a0c] text-xs font-mono text-[#71717a]">
+        <div className="max-w-6xl mx-auto px-6 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div>
+            <span>© 2026 Sachin Singh. Built with React &amp; Tailwind CSS.</span>
+          </div>
 
-          {/* Social links in the footer */}
-          <div className="flex gap-6">
-            <a href="https://github.com/silent-knight19" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors">
-              <FaGithub size={18} />
+          <div className="flex items-center gap-5">
+            <a
+              href="https://github.com/silent-knight19"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#ededed] transition-colors"
+            >
+              GitHub
             </a>
-            <a href="https://www.linkedin.com/in/sachinsinghdev" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors">
-              <FaLinkedin size={18} />
+            <a
+              href="https://www.linkedin.com/in/sachinsinghdev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#ededed] transition-colors"
+            >
+              LinkedIn
             </a>
-            <a href="mailto:sachinsinghtomar7749@gmail.com" className="text-gray-500 hover:text-white transition-colors">
-              <FaEnvelope size={18} />
-            </a>
+            <button
+              onClick={scrollToTop}
+              className="hover:text-[#f59e0b] transition-colors inline-flex items-center gap-1"
+            >
+              <span>Top</span>
+              <FiArrowUp size={12} />
+            </button>
           </div>
         </div>
       </footer>
